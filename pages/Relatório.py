@@ -61,10 +61,10 @@ def get_assuntos_por_macro():
           mt.macro_tema AS macro_label,
           COUNT(a.id) AS total_assuntos
         FROM macro_tema AS mt
-        JOIN area AS ar ON mt.id = ar.macro_tema_id
-        JOIN subarea AS s ON ar.id = s.area_id
-        JOIN disciplina AS d ON s.id = d.subarea_id
-        JOIN assunto AS a ON d.id = a.disciplina_id
+        LEFT JOIN area AS ar ON mt.id = ar.macro_tema_id
+        LEFT JOIN subarea AS s ON ar.id = s.area_id
+        LEFT JOIN disciplina AS d ON s.id = d.subarea_id
+        LEFT JOIN assunto AS a ON d.id = a.disciplina_id
         GROUP BY mt.id, macro_label
         ORDER BY total_assuntos DESC
     """

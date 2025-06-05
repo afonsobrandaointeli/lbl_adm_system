@@ -336,6 +336,7 @@ with tabs[2]:
 with tabs[3]:
     st.header("✏️ Editar Subárea")
     subs = fetch_subareas_with_hierarchy()
+    areas = fetch_areas_with_macro()
     if subs:
         options = {
             f"{row[1]} – {row[2]} – {row[3]}": (row[0], row[4], row[3])
