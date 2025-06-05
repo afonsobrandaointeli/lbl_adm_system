@@ -169,5 +169,96 @@ else:
             st.write("**Top 3 Macro Temas com mais Assuntos neste LBL:**")
             st.table(top3.rename(columns={"macro_label": "Macro Tema", "total_assuntos": "Assuntos"}))
 
+# Novos gráficos consolidados
 st.markdown("---")
-st.markdown("*Relatório gerado com Streamlit e Plotly*")
+st.subheader("🏷️ Áreas por Macro Tema")
+df_macro_area = pd.read_sql(
+    """
+    SELECT
+      mt.macro_tema AS macro_tema,
+      COUNT(ar.id) AS total_areas
+    FROM area AS ar
+    JOIN macro_tema AS mt ON ar.macro_tema_id = mt.id
+    GROUP BY mt.macro_tema
+    ORDER BY total_areas DESC
+    """,
+    engine,
+)
+fig4 = px.bar(
+    df_macro_area,
+    x="total_areas",
+    y="macro_tema",
+    orientation="h",
+    labels={"macro_tema": "Macro Tema", "total_areas": "Total de Áreas"},
+    title="Total de Áreas por Macro Tema",
+)
+st.plotly_chart(fig4, use_container_width=True)
+
+st.subheader("📂 Subáreas por Área")
+df_area_sub = pd.read_sql(
+    """
+    SELECT
+      ar.area AS area,
+      COUNT(s.id) AS total_subareas
+    FROM subarea AS s
+    JOIN area AS ar ON s.area_id = ar.id
+    GROUP BY ar.area
+    ORDER BY total_subareas DESC
+    """,
+    engine,
+)
+fig5 = px.bar(
+    df_area_sub,
+    x="total_subareas",
+    y="area",
+    orientation="h",
+    labels={"area": "Área", "total_subareas": "Total de Subáreas"},
+    title="Total de Subáreas por Área",
+)
+st.plotly_chart(fig5, use_container_width=True)
+
+st.subheader("📑 Disciplinas por Subárea")
+df_sub_disc = pd.read_sql(
+    """
+    SELECT
+      s.subarea AS subarea,
+      COUNT(d.id) AS total_disciplinas
+    FROM disciplina AS d
+    JOIN subarea AS s ON d.subarea_id = s.id
+    GROUP BY s.subarea
+    ORDER BY total_disciplinas DESC
+    """,
+    engine,
+)
+fig6 = px.bar(
+    df_sub_disc,
+    x="total_disciplinas",
+    y="subarea",
+    orientation="h",
+    labels={"subarea": "Subárea", "total_disciplinas": "Total de Disciplinas"},
+    title="Total de Disciplinas por Subárea",
+)
+st.plotly_chart(fig6, use_container_width=True)
+
+st.subheader("📝 Assuntos por Disciplina")
+df_disc_asm = pd.read_sql(
+    """
+    SELECT
+      d.nome AS disciplina,
+      COUNT(a.id) AS total_assuntos
+    FROM assunto AS a
+    JOIN disciplina AS d ON a.disciplina_id = d.id
+    GROUP BY d.nome
+    ORDER BY total_assuntos DESC
+    """,
+    engine,
+)
+fig7 = px.bar(
+    df_disc_asm,
+    x="total_assuntos",
+    y="disciplina",
+    orientation="h",
+    labels={"disciplina": "Disciplina", "total_assuntos": "Total de Assuntos"},
+    title="Total de Assuntos por Disciplina",
+)
+st.plotly_chart(fig7, use_container_width=True)
