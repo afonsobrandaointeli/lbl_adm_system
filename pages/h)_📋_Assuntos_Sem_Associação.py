@@ -1,30 +1,31 @@
 import streamlit as st
 import pandas as pd
 import psycopg2
-from psycopg2 import sql
 from dotenv import load_dotenv
 import os
 
+# Carrega variáveis do .env
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 st.set_page_config(page_title="Assuntos sem LBL", page_icon="📋", layout="wide")
 st.title("📋 Assuntos ainda não associados a nenhum LBL")
 
+# Conexão com o banco de dados
 @st.cache_resource
 def connect():
     if not DATABASE_URL:
         st.error("❌ DATABASE_URL não definida no .env")
         st.stop()
     try:
-        conn = psycopg2.connect(DATABASE_URL)
-        return conn
+        return psycopg2.connect(DATABASE_URL)
     except Exception as e:
         st.error(f"Erro de conexão: {e}")
         st.stop()
 
 conn = connect()
 
+# Consulta SQL
 query = """
     SELECT 
         a.id AS assunto_id,
@@ -43,6 +44,7 @@ query = """
     ORDER BY mt.macro_tema, ar.area, s.subarea, d.nome, a.assunto;
 """
 
+# Execução da consulta
 try:
     df = pd.read_sql(query, conn)
     if df.empty:
@@ -54,5 +56,3 @@ try:
         st.download_button("📥 Baixar CSV", csv, "assuntos_sem_lbl.csv", "text/csv")
 except Exception as e:
     st.error(f"Erro ao consultar o banco: {e}")
-finally:
-    conn.close()
