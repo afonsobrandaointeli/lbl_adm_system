@@ -1,10 +1,8 @@
-# migration_v2.py
 import psycopg2
 from psycopg2 import sql
 from dotenv import load_dotenv
 import os
 
-# Carrega as variáveis do arquivo .env
 load_dotenv()
 
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -18,7 +16,6 @@ def create_normalized_tables():
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
-        # Tabela macro_tema
         create_macro_tema_query = sql.SQL("""
             CREATE TABLE IF NOT EXISTS macro_tema (
                 id SERIAL PRIMARY KEY,
@@ -29,7 +26,6 @@ def create_normalized_tables():
         cur.execute(create_macro_tema_query)
         print("Tabela 'macro_tema' criada ou já existente.")
 
-        # Tabela lbl (adicionado campo descricao)
         create_lbl_query = sql.SQL("""
             CREATE TABLE IF NOT EXISTS lbl (
                 id SERIAL PRIMARY KEY,
@@ -42,7 +38,6 @@ def create_normalized_tables():
         cur.execute(create_lbl_query)
         print("Tabela 'lbl' criada ou já existente.")
 
-        # Tabela area
         create_area_query = sql.SQL("""
             CREATE TABLE IF NOT EXISTS area (
                 id SERIAL PRIMARY KEY,
@@ -55,7 +50,6 @@ def create_normalized_tables():
         cur.execute(create_area_query)
         print("Tabela 'area' criada ou já existente.")
 
-        # Tabela subarea
         create_subarea_query = sql.SQL("""
             CREATE TABLE IF NOT EXISTS subarea (
                 id SERIAL PRIMARY KEY,
@@ -68,7 +62,6 @@ def create_normalized_tables():
         cur.execute(create_subarea_query)
         print("Tabela 'subarea' criada ou já existente.")
 
-        # Tabela disciplina (nova)
         create_disciplina_query = sql.SQL("""
             CREATE TABLE IF NOT EXISTS disciplina (
                 id SERIAL PRIMARY KEY,
@@ -81,7 +74,6 @@ def create_normalized_tables():
         cur.execute(create_disciplina_query)
         print("Tabela 'disciplina' criada ou já existente.")
 
-        # Tabela assunto (FK passa a referenciar disciplina em vez de subarea)
         create_assunto_query = sql.SQL("""
             CREATE TABLE IF NOT EXISTS assunto (
                 id SERIAL PRIMARY KEY,
@@ -94,7 +86,6 @@ def create_normalized_tables():
         cur.execute(create_assunto_query)
         print("Tabela 'assunto' criada ou já existente. (FK para 'disciplina')")
 
-        # Tabela assunto_lbl (tabela de relacionamento)
         create_assunto_lbl_query = sql.SQL("""
             CREATE TABLE IF NOT EXISTS assunto_lbl (
                 assunto_id INTEGER NOT NULL,
@@ -107,7 +98,6 @@ def create_normalized_tables():
         cur.execute(create_assunto_lbl_query)
         print("Tabela 'assunto_lbl' criada ou já existente.")
 
-        # Criar índices para melhor performance
         create_indexes_queries = [
             "CREATE INDEX IF NOT EXISTS idx_area_macro_tema ON area(macro_tema_id);",
             "CREATE INDEX IF NOT EXISTS idx_subarea_area ON subarea(area_id);",
@@ -149,7 +139,6 @@ def drop_old_table():
         conn = psycopg2.connect(DATABASE_URL)
         cur = conn.cursor()
 
-        # Verificar se a tabela antiga existe
         cur.execute("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
@@ -180,10 +169,8 @@ if __name__ == "__main__":
     print("🔄 Iniciando migração para estrutura normalizada...")
     print("=" * 50)
     
-    # Criar as novas tabelas
     create_normalized_tables()
     
-    # Perguntar sobre remoção da tabela antiga
     drop_old_table()
     
     print("=" * 50)
