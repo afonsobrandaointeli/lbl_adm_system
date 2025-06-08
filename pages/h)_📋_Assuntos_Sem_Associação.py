@@ -11,22 +11,8 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 st.set_page_config(page_title="Assuntos sem LBL", page_icon="📋", layout="wide")
 st.title("📋 Assuntos ainda não associados a nenhum LBL")
 
-# Conexão com o banco de dados
-@st.cache_resource
-def connect():
-    if not DATABASE_URL:
-        st.error("❌ DATABASE_URL não definida no .env")
-        st.stop()
-    try:
-        return psycopg2.connect(DATABASE_URL)
-    except Exception as e:
-        st.error(f"Erro de conexão: {e}")
-        st.stop()
-
-conn = connect()
-
-# Consulta SQL
-query = """
+# Query SQL
+QUERY = """
     SELECT 
         a.id AS assunto_id,
         a.assunto,
@@ -44,15 +30,29 @@ query = """
     ORDER BY mt.macro_tema, ar.area, s.subarea, d.nome, a.assunto;
 """
 
-# Execução da consulta
+# Executa a consulta abrindo uma conexão nova a cada interação
 try:
-    df = pd.read_sql(query, conn)
-    if df.empty:
-        st.success("🎉 Todos os assuntos estão associados a pelo menos um LBL!")
-    else:
-        st.warning(f"⚠️ Foram encontrados {len(df)} assuntos sem LBL associado.")
-        st.dataframe(df, use_container_width=True)
-        csv = df.to_csv(index=False).encode("utf-8")
-        st.download_button("📥 Baixar CSV", csv, "assuntos_sem_lbl.csv", "text/csv")
+    if not DATABASE_URL:
+        st.error("❌ DATABASE_URL não definida no .env")
+        st.stop()
+
+    with psycopg2.connect(DATABASE_URL) as conn:
+        df = pd.read_sql(QUERY, conn)
+
 except Exception as e:
     st.error(f"Erro ao consultar o banco: {e}")
+    st.stop()
+
+# Exibe resultados
+if df.empty:
+    st.success("🎉 Todos os assuntos estão associados a pelo menos um LBL!")
+else:
+    st.warning(f"⚠️ Foram encontrados {len(df)} assuntos sem LBL associado.")
+    st.dataframe(df, use_container_width=True)
+    csv = df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="📥 Baixar CSV",
+        data=csv,
+        file_name="assuntos_sem_lbl.csv",
+        mime="text/csv"
+    )
